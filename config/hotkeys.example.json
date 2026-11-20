@@ -1,5 +1,6 @@
 {
-  "_help": "Key names: A-Z, 0-9, symbols, Space, Up, Down, Left, Right, Return, Escape, Tab. Modifiers: Shift+, Cmd+, Alt+, Ctrl+. Use \"none\" to unassign. Reopen the plugin window (or press Reload in the ? overlay) after editing.",
+  "version": 2,
+  "_help": "Key names: A-Z, 0-9, Space, Up, Down, Left, Right, Return, Escape, Tab. A symbol on its own (\"?\", \"[\", \"=\") matches however your keyboard types it. Modifiers: Shift+, Cmd+, Alt+, Ctrl+. Several keys: [\"[\", \"I\"]. Use \"none\" to unassign. Press Reload in the ? overlay after editing.",
   "bindings": {
     "play_pause": "Space",
     "hard_restart": "Shift+Space",
@@ -11,9 +12,16 @@
     "repeat_1_8": "R",
     "repeat_1_16": "T",
     "loop_toggle": "L",
-    "loop_in": "[",
-    "loop_out": "]",
+    "loop_in": [
+      "[",
+      "I"
+    ],
+    "loop_out": [
+      "]",
+      "O"
+    ],
     "set_cue": "C",
+    "snap_toggle": "N",
     "pad_1": "1",
     "pad_2": "2",
     "pad_3": "3",
@@ -31,9 +39,9 @@
     "pad_store_7": "Shift+7",
     "pad_store_8": "Shift+8",
     "bpm_up": "Up",
-    "bpm_down": "Down",
+    "bpm_down": "D",
     "bpm_up_10": "Shift+Up",
-    "bpm_down_10": "Shift+Down",
+    "bpm_down_10": "Shift+D",
     "override_toggle": "B",
     "sync_toggle": "Y",
     "keep_pitch": "K",
@@ -42,17 +50,20 @@
     "filter_bypass": "F",
     "cutoff_down": "Left",
     "cutoff_up": "Right",
-    "resonance_down": "Alt+Down",
+    "resonance_down": "Alt+D",
     "resonance_up": "Alt+Up",
     "mix_down": "Z",
     "mix_up": "X",
     "tape_time_down": ",",
     "tape_time_up": ".",
-    "gain_down": "Shift+-",
-    "gain_up": "Shift+=",
+    "gain_down": "9",
+    "gain_up": "0",
     "undo": "Cmd+Z",
     "redo": "Cmd+Shift+Z",
-    "load_sample": "O",
-    "show_help": "Shift+/"
+    "load_sample": "Cmd+O",
+    "show_help": [
+      "?",
+      "H"
+    ]
   }
 }

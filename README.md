@@ -14,21 +14,21 @@ beat-repeat it, filter it, and keep it in time with your project.
 
 | Feature | How |
 |---|---|
-| Load a sample | Drop a WAV / AIFF / MP3 (also FLAC, M4A, CAF, OGG) on the platter, click **LOAD**, or press **O** |
+| Load a sample | Drop a WAV / AIFF / MP3 (also FLAC, M4A, CAF, OGG) on the platter, click **LOAD**, or press **Cmd+O** |
 | Sample BPM | Read from the file name (`loop_92bpm.wav`), otherwise auto-detected. Editable, with /2, x2 and DETECT |
 | Platter playback | Varispeed: speed sets pitch, like a real record |
 | Scratch | Hold **S** and move the mouse over the platter, or just drag on the platter. Release ramps back to speed in 80 ms |
 | Tape stop | Hold **G**: slows to a stop over the Tape Stop time (0–4 s; 0 = instant); release spins back up over the same time |
 | Play / pause | **Space** (with tape-stop ramp). **Shift+Space**: instant restart from the cue point |
-| Loop | **L** loop on/off (1 bar from the playhead if no loop is set), **[** / **]** move loop in / out to the playhead |
-| Loop pads 1–8 | **1–8** recall, **Shift+1–8** (or Shift+click) store the current loop |
+| Loop | **L** loop on/off (1 bar from the current beat if no loop is set). **I** / **O** (or **[** / **]**) set loop in / out at the playhead. **SNAP** (on by default, key **N**) puts loop points on the beat |
+| Loop pads 1–8 | Tap an **empty** pad (or press **1–8**) to save a new 1-bar loop from the current beat and loop it. Tap a filled pad to jump back into its loop. **Shift+1–8** (or Shift+click) saves the current loop onto that pad |
 | Repeater | Hold **Q W E R T** = 1/1, 1/2, 1/4, 1/8, 1/16 bar. Repeats the slice just played; the track keeps running underneath, so releasing lands back in time. **Mix** sets dry/wet |
 | BPM sync | Plays at project BPM / sample BPM. Smoothly re-tempos with no jumps when the BPM changes |
 | System BPM knob | Follows the host by default. **Up/Down** ±1, **Shift+Up/Down** ±10 (switches to "Override host"), or turn the knob |
 | Keep pitch | **K**: tempo changes without pitch change (granular time-stretch). **-** / **=** shift pitch ±1 semitone |
 | Filter | XY pad: X = cutoff, Y = resonance (low-pass state-variable filter). **F** bypass, **Left/Right** cutoff, **Alt+Up/Down** resonance |
-| Extras | Waveform with playhead / loop / cue (click to jump), output gain and meter, undo/redo for loop edits (**Cmd+Z**, **Cmd+Shift+Z**), set cue (**C**) |
-| Hotkeys | Every control has a key. Press **?** for the list. Keys are stored in an editable JSON file |
+| Extras | Waveform with playhead / loop / cue (click to jump), output gain (**9** / **0**) and meter, undo/redo for loop edits (**Cmd+Z**, **Cmd+Shift+Z**), set cue (**C**) |
+| Hotkeys | Every control has a key. Press **?** or **H** for the list. Keys follow your keyboard layout (US, German, Austrian, ...) and are stored in an editable JSON file |
 
 Everything you set (sample path, sample BPM, loop, cue, pads, all knobs) is saved with your Ableton set and restored when you reopen it.
 
@@ -42,8 +42,10 @@ Your own copy lives at:
 ```
 
 It is created on first launch. Edit it (the **?** overlay has an "Edit hotkeys.json" button), then press **Reload**.
-Key names: `A`–`Z`, `0`–`9`, symbols, `Space`, `Up`, `Down`, `Left`, `Right`, `Return`, `Escape`, `Tab`;
-modifiers `Shift+`, `Cmd+`, `Alt+`, `Ctrl+`; `"none"` unassigns. Clashes are reported in the overlay.
+Key names: `A`–`Z`, `0`–`9`, `Space`, `Up`, `Down`, `Left`, `Right`, `Return`, `Escape`, `Tab`;
+modifiers `Shift+`, `Cmd+`, `Alt+`, `Ctrl+`. A symbol on its own (`"?"`, `"["`, `"="`) matches however
+your keyboard types it (on a German keyboard `[` is Alt+5). An action can have several keys: `["[", "I"]`.
+`"none"` unassigns. Clashes are reported in the overlay.
 
 > **Keyboard focus:** the plugin only receives keys while its window is focused. Click inside it first.
 > Some hosts keep certain keys for themselves (for example Space for the host transport). Rebind them in `hotkeys.json` if that happens.
@@ -97,7 +99,7 @@ BPM detection
 hotkeys
 
 allocations inside process(): 0
-133 checks, 0 failed
+153 checks, 0 failed
 ```
 
 **auval** (`auval -strict -v aumu Ttbl Tsmp`):

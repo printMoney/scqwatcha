@@ -78,6 +78,7 @@ private:
         outButton { "OUT", Colours::pad }, setCueButton { "SET CUE", Colours::accent }, undoButton { "UNDO", Colours::dim },
         redoButton { "REDO", Colours::dim };
     std::unique_ptr<PadButton> pads[TurntableProcessor::numPads];
+    juce::ToggleButton snapToggle { "SNAP" };
 
     HotkeyOverlay overlay;
 

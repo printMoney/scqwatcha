@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Target architectures")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version")
 
-project(TurntableSampler VERSION 0.1.0 LANGUAGES C CXX)
+project(TurntableSampler VERSION 0.1.0 LANGUAGES C CXX OBJCXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -53,6 +53,7 @@ target_sources(TurntableSampler PRIVATE
     src/PluginProcessor.cpp
     src/PluginEditor.cpp
     src/HotkeyMap.cpp
+    src/KeyboardLayout.mm
     src/SampleLoader.cpp
     src/ui/LookAndFeel.cpp
     src/ui/Platter.cpp
@@ -67,6 +68,7 @@ target_link_libraries(TurntableSampler
     PRIVATE
         juce::juce_audio_utils
         juce::juce_audio_formats
+        "-framework Carbon"
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
@@ -74,12 +76,13 @@ target_link_libraries(TurntableSampler
 
 if(TS_BUILD_TESTS)
     juce_add_console_app(TurntableTests PRODUCT_NAME "TurntableTests")
-    target_sources(TurntableTests PRIVATE tests/TestMain.cpp ${TS_ENGINE_SOURCES} src/HotkeyMap.cpp)
+    target_sources(TurntableTests PRIVATE tests/TestMain.cpp ${TS_ENGINE_SOURCES} src/HotkeyMap.cpp src/KeyboardLayout.mm)
     target_include_directories(TurntableTests PRIVATE src)
     target_compile_definitions(TurntableTests PRIVATE ${TS_COMMON_DEFINITIONS})
     target_link_libraries(TurntableTests PRIVATE
         juce::juce_audio_basics
         juce::juce_gui_basics
+        "-framework Carbon"
         juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags)
 endif()
@@ -93,5 +96,5 @@ if(TS_BUILD_SNAPSHOT)
     target_sources(UISnapshot PRIVATE tests/UISnapshot.cpp ${TS_PLUGIN_SOURCES})
     target_include_directories(UISnapshot PRIVATE src)
     target_compile_definitions(UISnapshot PRIVATE ${TS_COMMON_DEFINITIONS} JUCE_MODAL_LOOPS_PERMITTED=1)
-    target_link_libraries(UISnapshot PRIVATE juce::juce_audio_utils juce::juce_audio_formats juce::juce_recommended_config_flags)
+    target_link_libraries(UISnapshot PRIVATE juce::juce_audio_utils juce::juce_audio_formats "-framework Carbon" juce::juce_recommended_config_flags)
 endif()

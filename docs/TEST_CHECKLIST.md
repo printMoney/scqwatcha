@@ -10,7 +10,7 @@ Setup: `scripts/build.sh`, then in Live: Settings → Plug-Ins → Rescan. Creat
 - [ ] **Tape stop:** hold **G**. It slows down and stops over about 1 second. Release: it spins back up. Turn the TAPE STOP knob to 3 s and try again.
 - [ ] **Repeater 1/4:** hold **E** while it plays. It stutters one beat at a time, in time with Live. Release: it carries on exactly in time.
 - [ ] **Change host BPM mid-playback:** while it plays, change Live's tempo from 120 to 140. Speed and pitch rise smoothly, with no jump or click. Press **K** (Keep pitch) and change the tempo again: the speed changes but the pitch stays.
-- [ ] **Loop and pads:** press **L** (a 1-bar loop starts), then **Shift+1** to store it on pad 1. Press **L** to turn the loop off, let it play on, then press **1**: it jumps back into the stored loop.
+- [ ] **Loop and pads:** while it plays, tap pad **2** (empty): a new 1-bar loop starts on the beat and pad 2 turns blue. Press **L** to leave the loop, let it play on, then press **2**: it jumps back into that loop. Press **I** and later **O** to set your own loop points (they land on the beat), then **Shift+3** to save that loop on pad 3.
 - [ ] **Filter:** drag in the FILTER pad. The sound gets darker to the left and more resonant to the top. Press **F** to bypass.
 - [ ] **Reload the Ableton set:** save the set, close it, reopen it. The sample, sample BPM, loop, pad 1 and every knob are as you left them.
 - [ ] **Hotkey overlay:** press **?**. The list appears; Esc closes it.

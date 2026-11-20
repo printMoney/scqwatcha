@@ -114,6 +114,9 @@ TurntableEditor::TurntableEditor (TurntableProcessor& p)
         addAndMakeVisible (*pads[i]);
     }
 
+    setupToggle (snapToggle, Colours::pad);
+    buttonAttachments.push_back (std::make_unique<ButtonAttachment> (proc.apvts, ParamID::snap, snapToggle));
+
     addChildComponent (overlay);
     overlay.onClose = [this] { overlay.setVisible (false); grabFocusSoon(); };
     overlay.onReload = [this] { reloadHotkeys(); };
@@ -247,6 +250,8 @@ void TurntableEditor::resized()
             if (i == 2 || i == 5)
                 transport.removeFromLeft (14);
         }
+        transport.removeFromLeft (6);
+        snapToggle.setBounds (transport.removeFromLeft (76).reduced (3, 14));
         redoButton.setBounds (transport.removeFromRight (90).reduced (3, 0));
         undoButton.setBounds (transport.removeFromRight (90).reduced (3, 0));
     }
@@ -359,7 +364,7 @@ void TurntableEditor::timerCallback()
     {
         pads[i]->setFilled (proc.padHasRegion (i));
         pads[i]->setLit (proc.padIsCurrentLoop (i));
-        pads[i]->setSubLabel (proc.padHasRegion (i) ? "" : "shift+click to store");
+        pads[i]->setSubLabel (proc.padHasRegion (i) ? "shift+tap: replace" : "tap: save loop here");
     }
     undoButton.setFilled (proc.undoManager.canUndo());
     redoButton.setFilled (proc.undoManager.canRedo());
@@ -440,8 +445,7 @@ bool TurntableEditor::keyPressed (const juce::KeyPress& key)
         return true;
     }
 
-    const auto binding = HotkeyMap::fromKeyPress (key);
-    auto action = hotkeys.find (binding);
+    auto action = hotkeys.find (key);
     if (! action)
         return false; // let the host have it
 
@@ -532,6 +536,7 @@ void TurntableEditor::perform (Action a, bool down)
         case Action::LoopIn:      proc.setLoopInHere(); break;
         case Action::LoopOut:     proc.setLoopOutHere(); break;
         case Action::SetCue:      proc.setCueHere(); break;
+        case Action::SnapToggle:  proc.toggleParam (ParamID::snap); break;
 
         case Action::Pad1: case Action::Pad2: case Action::Pad3: case Action::Pad4:
         case Action::Pad5: case Action::Pad6: case Action::Pad7: case Action::Pad8:

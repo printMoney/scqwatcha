@@ -537,15 +537,24 @@ void testBpmDetect()
 void testHotkeys()
 {
     std::puts ("hotkeys");
+
+    // Simulated keyboards: Shift+key -> plain key, as the system layout reports it.
+    const std::map<juce::juce_wchar, juce::juce_wchar> us {
+        { '!', '1' }, { '@', '2' }, { '#', '3' }, { '$', '4' }, { '%', '5' }, { '^', '6' }, { '&', '7' }, { '*', '8' },
+        { '(', '9' }, { ')', '0' }, { '_', '-' }, { '+', '=' }, { '{', '[' }, { '}', ']' }, { '?', '/' }, { '<', ',' }, { '>', '.' } };
+    const std::map<juce::juce_wchar, juce::juce_wchar> austrian {
+        { '!', '1' }, { '"', '2' }, { (juce::juce_wchar) 0xa7, '3' }, { '$', '4' }, { '%', '5' }, { '&', '6' }, { '/', '7' },
+        { '(', '8' }, { ')', '9' }, { '=', '0' }, { '?', (juce::juce_wchar) 0xdf }, { '_', '-' }, { ';', ',' }, { ':', '.' } };
+
+    HotkeyMap::setLayoutForTesting (&us);
     HotkeyMap map;
-    // Every default parses and no two actions share a key.
+
     int bound = 0;
     for (auto& a : HotkeyMap::actions())
     {
-        const auto b = map.get (a.action);
-        check (b.isValid(), a.id);
-        if (b.isValid())
-            ++bound;
+        const bool ok = ! map.get (a.action).empty();
+        check (ok, a.id);
+        bound += ok ? 1 : 0;
     }
     check (bound == (int) HotkeyMap::actions().size(), "all defaults bound");
     const auto problems = map.loadFromJson (map.toJson());
@@ -553,26 +562,53 @@ void testHotkeys()
     if (! problems.isEmpty())
         std::printf ("      %s\n", problems.joinIntoString ("; ").toRawUTF8());
 
-    check (map.find (*HotkeyMap::parse ("Space")) == Action::PlayPause, "Space = play/pause");
-    check (map.find (*HotkeyMap::parse ("Shift+Space")) == Action::HardRestart, "Shift+Space = hard restart");
-    check (map.find (*HotkeyMap::parse ("G")) == Action::TapeStop, "G = tape stop");
-    check (map.find (*HotkeyMap::parse ("T")) == Action::Repeat16, "T = repeater 1/16");
-    check (map.find (*HotkeyMap::parse ("?")) == Action::ShowHelp, "? = help");
+    auto key = [] (int code, int mods, juce::juce_wchar text) { return juce::KeyPress (code, juce::ModifierKeys (mods), text); };
+    auto is = [&] (const juce::KeyPress& k, Action a) { auto f = map.find (k); return f.has_value() && *f == a; };
+    const int shift = juce::ModifierKeys::shiftModifier, alt = juce::ModifierKeys::altModifier,
+              cmd = juce::ModifierKeys::commandModifier;
 
-    // A shifted digit as macOS reports it ('!' with shift) must hit "store pad 1".
-    const juce::KeyPress shifted1 ('!', juce::ModifierKeys::shiftModifier, '!');
-    check (map.find (HotkeyMap::fromKeyPress (shifted1)) == Action::PadStore1, "Shift+1 stores pad 1");
-    const juce::KeyPress lowerS ('s', 0, 's');
-    check (map.find (HotkeyMap::fromKeyPress (lowerS)) == Action::ScratchHold, "lower-case s = scratch");
-    const juce::KeyPress bracket ('{', juce::ModifierKeys::shiftModifier, '{');
-    check (! map.find (HotkeyMap::fromKeyPress (bracket)).has_value(), "Shift+[ is not loop-in");
+    // US keyboard.
+    check (is (key (' ', 0, ' '), Action::PlayPause), "US: Space = play/pause");
+    check (is (key (' ', shift, ' '), Action::HardRestart), "US: Shift+Space = hard restart");
+    check (is (key ('s', 0, 's'), Action::ScratchHold), "US: s = scratch");
+    check (is (key ('G', 0, 'g'), Action::TapeStop), "US: G = tape stop");
+    check (is (key ('T', 0, 't'), Action::Repeat16), "US: T = repeater 1/16");
+    check (is (key ('!', shift, '!'), Action::PadStore1), "US: Shift+1 stores pad 1");
+    check (is (key ('@', shift, '@'), Action::PadStore2), "US: Shift+2 stores pad 2");
+    check (is (key ('[', 0, '['), Action::LoopIn), "US: [ = loop in");
+    check (is (key (']', 0, ']'), Action::LoopOut), "US: ] = loop out");
+    check (is (key ('?', shift, '?'), Action::ShowHelp), "US: ? = help");
+    check (is (key ('=', 0, '='), Action::PitchUp), "US: = = pitch up");
+    check (! is (key ('{', shift, '{'), Action::LoopIn), "US: Shift+[ is not loop in");
 
-    // User overrides and clash detection.
-    auto p2 = map.loadFromJson (R"({"bindings":{"tape_stop":"H","repeat_1_16":"Q"}})");
-    check (map.find (*HotkeyMap::parse ("H")) == Action::TapeStop, "user can rebind");
-    check (p2.size() == 1, "clash reported when two actions share a key", p2.size());
+    // Austrian / German keyboard.
+    HotkeyMap::setLayoutForTesting (&austrian);
+    map.setDefaults();
+    check (is (key ('"', shift, '"'), Action::PadStore2), "AT: Shift+2 (types \") stores pad 2");
+    check (is (key (0xa7, shift, 0xa7), Action::PadStore3), "AT: Shift+3 (types §) stores pad 3");
+    check (is (key ('/', shift, '/'), Action::PadStore7), "AT: Shift+7 (types /) stores pad 7");
+    check (is (key ('5', alt, '['), Action::LoopIn), "AT: Alt+5 (types [) = loop in");
+    check (is (key ('6', alt, ']'), Action::LoopOut), "AT: Alt+6 (types ]) = loop out");
+    check (is (key ('?', shift, '?'), Action::ShowHelp), "AT: Shift+ß (types ?) = help");
+    check (is (key ('=', shift, '='), Action::PitchUp), "AT: Shift+0 (types =) = pitch up");
+    check (is (key ('0', 0, '0'), Action::GainUp), "AT: 0 = gain up");
+    check (is (key ('-', 0, '-'), Action::PitchDown), "AT: - = pitch down");
+    check (is (key ('I', 0, 'i'), Action::LoopIn), "AT: I = loop in");
+    check (is (key ('O', 0, 'o'), Action::LoopOut), "AT: O = loop out");
+    check (is (key ('H', 0, 'h'), Action::ShowHelp), "AT: H = help");
+    check (is (key ('O', cmd, 'o'), Action::LoadSample), "AT: Cmd+O = load");
+    check (is (key ('1', 0, '1'), Action::Pad1), "AT: 1 = pad 1");
+    check (map.loadFromJson (map.toJson()).isEmpty(), "AT: defaults have no clashes");
+
+    // User file: overrides, lists, clashes, bad JSON.
+    HotkeyMap::setLayoutForTesting (&us);
+    auto p2 = map.loadFromJson (R"({"version":2,"bindings":{"tape_stop":["H","J"],"repeat_1_16":"Q"}})");
+    check (is (key ('J', 0, 'j'), Action::TapeStop) && ! is (key ('G', 0, 'g'), Action::TapeStop), "user can rebind to several keys");
+    check (p2.size() == 2, "clashes reported (H with help, Q with 1/1)", p2.size());
     auto p3 = map.loadFromJson ("{ not json");
-    check (p3.size() == 1 && map.find (*HotkeyMap::parse ("G")) == Action::TapeStop, "bad JSON falls back to defaults");
+    check (p3.size() == 1 && is (key ('G', 0, 'g'), Action::TapeStop), "bad JSON falls back to defaults");
+
+    HotkeyMap::setLayoutForTesting (nullptr);
 }
 
 } // namespace

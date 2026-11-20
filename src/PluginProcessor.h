@@ -25,6 +25,7 @@ inline constexpr const char* sync = "sync";
 inline constexpr const char* keepPitch = "keepPitch";
 inline constexpr const char* pitch = "pitch";
 inline constexpr const char* gain = "gain";
+inline constexpr const char* snap = "snap";
 } // namespace ParamID
 
 namespace DeckID
@@ -100,7 +101,7 @@ public:
     void setLoopInHere();
     void setLoopOutHere();
     void setCueHere();
-    void recallPad (int index);
+    void recallPad (int index); // empty pad: saves a new 1-bar loop at the playhead and loops it
     void storePad (int index);
     bool padHasRegion (int index) const;
     bool padIsCurrentLoop (int index) const;
@@ -110,6 +111,8 @@ public:
     double getCue() const;
 
     double barFrames() const;   // one 4/4 bar of the current sample, in source frames
+    // Snaps a position to the beat grid (beats counted from the sample start) when Snap is on.
+    double snapToBeat (double frames, bool roundDown) const;
     double effectiveBpm() const { return status.effectiveBpm.load(); }
 
     void nudgeParam (const char* id, float delta); // delta in the parameter's own units

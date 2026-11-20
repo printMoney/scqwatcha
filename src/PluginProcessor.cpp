@@ -60,6 +60,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout TurntableProcessor::createLa
         ParameterID { ParamID::gain, 1 }, "Gain", NormalisableRange<float> (-36.0f, 12.0f, 0.1f), 0.0f,
         AudioParameterFloatAttributes().withLabel ("dB")));
 
+    layout.add (std::make_unique<AudioParameterBool> (ParameterID { ParamID::snap, 1 }, "Snap Loops To Beat", true));
+
     return layout;
 }
 
@@ -398,6 +400,16 @@ double TurntableProcessor::barFrames() const
     return 4.0 * 60.0 / juce::jmax (1.0, bpm) * s->sampleRate;
 }
 
+double TurntableProcessor::snapToBeat (double frames, bool roundDown) const
+{
+    const double beat = barFrames() / 4.0;
+    if (getParam (ParamID::snap) < 0.5f || beat <= minLoopFrames)
+        return frames;
+    const double beats = frames / beat;
+    // Within 1/16 beat counts as "on" the beat, so a slightly late press still rounds down to it.
+    return (roundDown ? std::floor (beats + 1.0 / 16.0) : std::round (beats)) * beat;
+}
+
 void TurntableProcessor::setLoopRegion (double in, double out, bool on)
 {
     deck.setProperty (DeckID::loopIn, in, &undoManager);
@@ -423,7 +435,7 @@ void TurntableProcessor::toggleLoop()
     double in = getLoopIn(), out = getLoopOut();
     if (out - in <= minLoopFrames)
     {
-        in = juce::jlimit (0.0, length, ph);
+        in = juce::jlimit (0.0, length, snapToBeat (ph, true));
         out = juce::jmin (length, in + barFrames());
     }
     if (out - in <= minLoopFrames)
@@ -441,7 +453,7 @@ void TurntableProcessor::setLoopInHere()
         return;
 
     const double length = s->numFrames();
-    const double in = juce::jlimit (0.0, length, status.playhead.load());
+    const double in = juce::jlimit (0.0, length, snapToBeat (status.playhead.load(), false));
     double out = getLoopOut();
     if (out <= in + minLoopFrames)
         out = juce::jmin (length, in + barFrames());
@@ -459,7 +471,7 @@ void TurntableProcessor::setLoopOutHere()
         return;
 
     const double length = s->numFrames();
-    const double out = juce::jlimit (0.0, length, status.playhead.load());
+    const double out = juce::jlimit (0.0, length, snapToBeat (status.playhead.load(), false));
     double in = getLoopIn();
     if (out <= in + minLoopFrames)
         in = juce::jmax (0.0, out - barFrames());
@@ -468,6 +480,11 @@ void TurntableProcessor::setLoopOutHere()
 
     undoManager.beginNewTransaction ("Loop out");
     setLoopRegion (in, out, isLoopOn());
+
+    // Snapping can put the out point just behind the playhead: wrap back in, keeping the beat.
+    const double ph = status.playhead.load();
+    if (isLoopOn() && ph >= out)
+        jumpTo (in + std::fmod (ph - out, out - in));
 }
 
 void TurntableProcessor::setCueHere()
@@ -492,8 +509,25 @@ bool TurntableProcessor::padIsCurrentLoop (int i) const
 
 void TurntableProcessor::recallPad (int i)
 {
-    if (i < 0 || i >= numPads || ! padHasRegion (i))
+    const auto* s = getUiSample();
+    if (i < 0 || i >= numPads || s == nullptr)
         return;
+
+    if (! padHasRegion (i))
+    {
+        // Empty pad: capture a new 1-bar loop starting at the current beat and loop it.
+        const double length = s->numFrames();
+        const double in = juce::jlimit (0.0, length, snapToBeat (status.playhead.load(), true));
+        const double out = juce::jmin (length, in + barFrames());
+        if (out - in <= minLoopFrames)
+            return;
+        undoManager.beginNewTransaction ("Save new loop on pad");
+        deck.setProperty (DeckID::padIn (i), in, &undoManager);
+        deck.setProperty (DeckID::padOut (i), out, &undoManager);
+        setLoopRegion (in, out, true);
+        return;
+    }
+
     const double in = deck[DeckID::padIn (i)];
     const double out = deck[DeckID::padOut (i)];
     undoManager.beginNewTransaction ("Recall pad");
@@ -510,7 +544,7 @@ void TurntableProcessor::storePad (int i)
     double in = getLoopIn(), out = getLoopOut();
     if (out - in <= minLoopFrames)
     {
-        in = juce::jlimit (0.0, (double) s->numFrames(), status.playhead.load());
+        in = juce::jlimit (0.0, (double) s->numFrames(), snapToBeat (status.playhead.load(), true));
         out = juce::jmin ((double) s->numFrames(), in + barFrames());
     }
     if (out - in <= minLoopFrames)
