@@ -193,6 +193,24 @@ void testTapeStop()
     check (rig.engine.getMotor() == 1.0, "back to full speed after spin-up", rig.engine.getMotor());
     check (rig.maxStep() < clickThreshold, "no clicks through tape stop", rig.maxStep());
 
+    // 0 s = instant stop and start, still without a click.
+    {
+        Rig r0 (makeSine (20.0, 110.0));
+        r0.params.tapeStopSeconds = 0.0f;
+        r0.cmd (Cmd::HardRestart);
+        r0.run (0.5);
+        const size_t mark0 = r0.out.size();
+        r0.cmd (Cmd::TapeStopDown);
+        r0.run (0.012);
+        check (r0.engine.getMotor() == 0.0, "tape stop at 0 s stops within 12 ms", r0.engine.getMotor());
+        r0.run (0.2);
+        r0.cmd (Cmd::TapeStopUp);
+        r0.run (0.012);
+        check (r0.engine.getMotor() == 1.0, "and restarts within 12 ms", r0.engine.getMotor());
+        r0.run (0.2);
+        check (r0.maxStep (mark0) < clickThreshold, "no click on instant stop or start", r0.maxStep (mark0));
+    }
+
     // Short and long settings.
     for (float secs : { 0.2f, 4.0f })
     {

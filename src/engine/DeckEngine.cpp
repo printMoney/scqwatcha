@@ -366,7 +366,8 @@ void DeckEngine::process (float* left, float* right, int n, const EngineParams& 
         tempoInitialised = true;
     }
 
-    const double motorStep = 1.0 / (juce::jlimit (0.05, 10.0, (double) p.tapeStopSeconds) * hostRate);
+    // 0 s means "instant", but a 10 ms brake keeps it from clicking.
+    const double motorStep = 1.0 / (juce::jlimit (0.01, 10.0, (double) p.tapeStopSeconds) * hostRate);
     const double semitoneRatio = p.keepPitch ? std::pow (2.0, juce::jlimit (-24.0, 24.0, (double) p.pitchSemitones) / 12.0) : 1.0;
     const double scratchTarget = scratchAnchor + scratchOffset;
     const double maxHand = 30.0 * srRatio;

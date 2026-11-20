@@ -35,7 +35,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout TurntableProcessor::createLa
         ParameterID { ParamID::repeaterMix, 1 }, "Repeater Mix", NormalisableRange<float> (0.0f, 1.0f), 1.0f,
         AudioParameterFloatAttributes().withStringFromValueFunction ([] (float v, int) { return String (juce::roundToInt (v * 100.0f)) + " %"; })));
 
-    NormalisableRange<float> tapeRange (0.2f, 4.0f, 0.01f);
+    NormalisableRange<float> tapeRange (0.0f, 4.0f, 0.01f); // 0 = instant (10 ms brake)
     tapeRange.setSkewForCentre (1.0f);
     layout.add (std::make_unique<AudioParameterFloat> (
         ParameterID { ParamID::tapeStopTime, 1 }, "Tape Stop Time", tapeRange, 1.0f,

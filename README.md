@@ -18,7 +18,7 @@ beat-repeat it, filter it, and keep it in time with your project.
 | Sample BPM | Read from the file name (`loop_92bpm.wav`), otherwise auto-detected. Editable, with /2, x2 and DETECT |
 | Platter playback | Varispeed: speed sets pitch, like a real record |
 | Scratch | Hold **S** and move the mouse over the platter, or just drag on the platter. Release ramps back to speed in 80 ms |
-| Tape stop | Hold **G**: slows to a stop over the Tape Stop time (0.2–4 s); release spins back up over the same time |
+| Tape stop | Hold **G**: slows to a stop over the Tape Stop time (0–4 s; 0 = instant); release spins back up over the same time |
 | Play / pause | **Space** (with tape-stop ramp). **Shift+Space**: instant restart from the cue point |
 | Loop | **L** loop on/off (1 bar from the playhead if no loop is set), **[** / **]** move loop in / out to the playhead |
 | Loop pads 1–8 | **1–8** recall, **Shift+1–8** (or Shift+click) store the current loop |
@@ -97,7 +97,7 @@ BPM detection
 hotkeys
 
 allocations inside process(): 0
-130 checks, 0 failed
+133 checks, 0 failed
 ```
 
 **auval** (`auval -strict -v aumu Ttbl Tsmp`):
