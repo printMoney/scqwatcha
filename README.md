@@ -190,6 +190,11 @@ git tag v0.2.0 && git push origin v0.2.0
 The `Release` workflow builds the universal binaries, runs the tests, builds the installer and zip with
 `scripts/package.sh`, and publishes them on the GitHub release page.
 
+## Credits
+
+Created by [@printMoney](https://github.com/printMoney), built together with [Claude](https://claude.ai) (Anthropic).
+Uses [JUCE](https://juce.com). Contributions are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 scqwatcha is free software under the GNU General Public License v3.0 (see [`LICENSE`](LICENSE)).
