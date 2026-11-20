@@ -32,11 +32,11 @@ set(TS_COMMON_DEFINITIONS
     JUCE_VST3_CAN_REPLACE_VST2=0)
 
 juce_add_plugin(TurntableSampler
-    PRODUCT_NAME                "Turntable Sampler"
-    COMPANY_NAME                "Turntable Sampler Project"
-    BUNDLE_ID                   org.turntablesampler.plugin
-    PLUGIN_MANUFACTURER_CODE    Tsmp
-    PLUGIN_CODE                 Ttbl
+    PRODUCT_NAME                "scqwatcha"
+    COMPANY_NAME                "scqwatcha"
+    BUNDLE_ID                   org.scqwatcha.plugin
+    PLUGIN_MANUFACTURER_CODE    Scqw
+    PLUGIN_CODE                 Scq1
     FORMATS                     VST3 AU Standalone
     IS_SYNTH                    TRUE
     NEEDS_MIDI_INPUT            TRUE

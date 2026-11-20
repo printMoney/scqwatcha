@@ -15,7 +15,7 @@ juce::PropertiesFile::Options settingsOptions()
 {
     juce::PropertiesFile::Options o;
     o.applicationName = "settings";
-    o.folderName = "Turntable Sampler";
+    o.folderName = "scqwatcha";
     o.filenameSuffix = ".xml";
     o.osxLibrarySubFolder = "Application Support";
     o.storageFormat = juce::PropertiesFile::storeAsXML;

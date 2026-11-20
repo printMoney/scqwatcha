@@ -1,0 +1,4 @@
+#!/bin/sh
+# Make macOS (and hosts like Ableton or Logic) notice the new Audio Unit.
+killall -9 AudioComponentRegistrar >/dev/null 2>&1 || true
+exit 0

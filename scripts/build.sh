@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds "Turntable Sampler.vst3", "Turntable Sampler.component" (AU) and the
+# Builds "scqwatcha.vst3", "scqwatcha.component" (AU) and the
 # standalone app as universal binaries (Apple Silicon + Intel), runs the engine
 # tests, and copies the results to dist/.
 #
@@ -25,13 +25,13 @@ echo "== Engine tests"
 
 OUT=build/TurntableSampler_artefacts/Release
 rm -rf dist && mkdir -p dist
-cp -R "$OUT/VST3/Turntable Sampler.vst3" dist/
-cp -R "$OUT/AU/Turntable Sampler.component" dist/
-cp -R "$OUT/Standalone/Turntable Sampler.app" dist/
+cp -R "$OUT/VST3/scqwatcha.vst3" dist/
+cp -R "$OUT/AU/scqwatcha.component" dist/
+cp -R "$OUT/Standalone/scqwatcha.app" dist/
 
 echo "== Architectures"
-lipo -archs "dist/Turntable Sampler.vst3/Contents/MacOS/Turntable Sampler"
-lipo -archs "dist/Turntable Sampler.component/Contents/MacOS/Turntable Sampler"
+lipo -archs "dist/scqwatcha.vst3/Contents/MacOS/scqwatcha"
+lipo -archs "dist/scqwatcha.component/Contents/MacOS/scqwatcha"
 
 if [[ "$INSTALL" == "ON" ]]; then
   # Make macOS notice the new AU.

@@ -15,12 +15,12 @@ if [[ ! -x "$PV" ]]; then
   unzip -q -o tools/pluginval.zip -d tools && rm tools/pluginval.zip
 fi
 
-VST3="$HOME/Library/Audio/Plug-Ins/VST3/Turntable Sampler.vst3"
-AU="$HOME/Library/Audio/Plug-Ins/Components/Turntable Sampler.component"
+VST3="$HOME/Library/Audio/Plug-Ins/VST3/scqwatcha.vst3"
+AU="$HOME/Library/Audio/Plug-Ins/Components/scqwatcha.component"
 mkdir -p build/validation
 
 echo "== auval"
-auval -strict -v aumu Ttbl Tsmp | tee build/validation/auval.log | tail -3
+auval -strict -v aumu Scq1 Scqw | tee build/validation/auval.log | tail -3
 
 echo "== pluginval VST3 (strictness 5)"
 "$PV" --strictness-level 5 --validate-in-process --output-dir build/validation --validate "$VST3" \

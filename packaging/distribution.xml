@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>scqwatcha @VERSION@</title>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <license file="LICENSE.txt"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+    <options customize="allow" require-scripts="false" hostArchitectures="arm64,x86_64"/>
+    <domains enable_localSystem="true" enable_currentUserHome="true"/>
+    <os-version min="11.0"/>
+    <choices-outline>
+        <line choice="vst3"/>
+        <line choice="au"/>
+        <line choice="app"/>
+    </choices-outline>
+    <choice id="vst3" title="VST3 plugin" description="For Ableton Live, Bitwig, Reaper, Cubase, FL Studio and most other hosts.">
+        <pkg-ref id="org.scqwatcha.pkg.vst3"/>
+    </choice>
+    <choice id="au" title="Audio Unit plugin" description="For Logic Pro, GarageBand, and Ableton Live.">
+        <pkg-ref id="org.scqwatcha.pkg.au"/>
+    </choice>
+    <choice id="app" title="Standalone app" description="Use it without a DAW.">
+        <pkg-ref id="org.scqwatcha.pkg.app"/>
+    </choice>
+    <pkg-ref id="org.scqwatcha.pkg.vst3">vst3.pkg</pkg-ref>
+    <pkg-ref id="org.scqwatcha.pkg.au">au.pkg</pkg-ref>
+    <pkg-ref id="org.scqwatcha.pkg.app">app.pkg</pkg-ref>
+</installer-gui-script>

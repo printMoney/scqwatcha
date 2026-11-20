@@ -1,10 +1,28 @@
-# Turntable Sampler
+# scqwatcha
 
-An open-source turntable-style sampler plugin for macOS (VST3 + AU + standalone app).
+[![Build](https://github.com/printMoney/scqwatcha/actions/workflows/build.yml/badge.svg)](https://github.com/printMoney/scqwatcha/actions/workflows/build.yml)
+[![Latest release](https://img.shields.io/github/v/release/printMoney/scqwatcha?include_prereleases)](https://github.com/printMoney/scqwatcha/releases/latest)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+
+**scqwatcha** is an open-source turntable-style sampler plugin for macOS (VST3 + AU + standalone app).
 Load a sample, and it spins on a virtual platter: scratch it, tape-stop it, loop it,
 beat-repeat it, filter it, and keep it in time with your project.
 
-![Turntable Sampler window](docs/screenshot.png)
+![scqwatcha window](docs/screenshot.png)
+
+## Download and install
+
+1. Open the [latest release](https://github.com/printMoney/scqwatcha/releases/latest) and download **`scqwatcha-<version>-macOS.pkg`**.
+2. Double-click it. macOS says it can't verify the installer, because it isn't signed with a paid Apple developer ID.
+   Click **Done**, then open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to scqwatcha.
+   (macOS 14 or older: right-click the .pkg → **Open** → **Open**.)
+3. Click through the installer. It puts the VST3, the Audio Unit and the standalone app in the standard folders.
+4. In Ableton Live: **Settings → Plug-Ins**, turn on the VST3 system folder and/or Audio Units, click **Rescan**,
+   then drag **scqwatcha** onto a MIDI track. Click inside the plugin and press **H** for the keyboard shortcuts.
+
+Prefer to install by hand? The release also has a `.zip` with the three bundles and an `INSTALL.txt`.
+
+## About
 
 - Universal binary: Apple Silicon and Intel, macOS 11 or newer
 - C++17, [JUCE 8](https://juce.com) (CMake), no proprietary dependencies
@@ -53,7 +71,7 @@ The full list is in the **?** overlay and in [`config/hotkeys.example.json`](con
 Your own copy lives at:
 
 ```
-~/Library/Application Support/Turntable Sampler/hotkeys.json
+~/Library/Application Support/scqwatcha/hotkeys.json
 ```
 
 It is created on first launch. Edit it (the **?** overlay has an "Edit hotkeys.json" button), then press **Reload**.
@@ -65,7 +83,7 @@ your keyboard types it (on a German keyboard `[` is Alt+5). An action can have s
 > **Keyboard focus:** the plugin only receives keys while its window is focused. Click inside it first.
 > Some hosts keep certain keys for themselves (for example Space for the host transport). Rebind them in `hotkeys.json` if that happens.
 
-## Build
+## Build from source
 
 Requirements: macOS with Xcode (command line tools) and CMake 3.22+ (`brew install cmake`).
 
@@ -73,7 +91,7 @@ Requirements: macOS with Xcode (command line tools) and CMake 3.22+ (`brew insta
 scripts/build.sh
 ```
 
-This produces universal `Turntable Sampler.vst3`, `Turntable Sampler.component` (AU) and `Turntable Sampler.app` in `dist/`, runs the engine tests, and installs the plugins into `~/Library/Audio/Plug-Ins`. Use `scripts/build.sh --no-install` to skip installing.
+This produces universal `scqwatcha.vst3`, `scqwatcha.component` (AU) and `scqwatcha.app` in `dist/`, runs the engine tests, and installs the plugins into `~/Library/Audio/Plug-Ins`. Use `scripts/build.sh --no-install` to skip installing.
 JUCE 8.0.15 is fetched automatically; put a checkout in `external/JUCE` to build offline.
 
 Manual CMake:
@@ -89,7 +107,7 @@ Validate (downloads pluginval on first run):
 scripts/validate.sh
 ```
 
-In Ableton Live: rescan plugins (Settings → Plug-Ins → Rescan), then drag **Turntable Sampler** onto a MIDI track. It is an instrument, so it needs no audio input.
+In Ableton Live: rescan plugins (Settings → Plug-Ins → Rescan), then drag **scqwatcha** onto a MIDI track. It is an instrument, so it needs no audio input.
 
 ## Validation results
 
@@ -117,7 +135,7 @@ allocations inside process(): 0
 153 checks, 0 failed
 ```
 
-**auval** (`auval -strict -v aumu Ttbl Tsmp`):
+**auval** (`auval -strict -v aumu Scq1 Scqw`):
 
 ```
 Render Test at 512 frames
@@ -161,8 +179,19 @@ The AU run prints one warning, `Current program is -1... Is this correct?`. That
 - MIDI notes do not trigger anything yet (planned: pads and transport on MIDI notes, useful when the host keeps keyboard focus).
 - Samples longer than 20 minutes are cut at 20 minutes.
 
+## Releasing
+
+Bump `VERSION` in `CMakeLists.txt`, add a section to `CHANGELOG.md`, update `packaging/RELEASE_NOTES.md`, then push a tag:
+
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+The `Release` workflow builds the universal binaries, runs the tests, builds the installer and zip with
+`scripts/package.sh`, and publishes them on the GitHub release page.
+
 ## License
 
-Turntable Sampler is free software under the GNU General Public License v3.0 (see [`LICENSE`](LICENSE)).
+scqwatcha is free software under the GNU General Public License v3.0 (see [`LICENSE`](LICENSE)).
 It uses JUCE 8 under its AGPLv3 open-source licence. GPLv3 §13 allows combining with AGPLv3 code, and the JUCE portions stay under the AGPLv3.
 VST is a trademark of Steinberg Media Technologies GmbH. Audio Units is a trademark of Apple Inc.

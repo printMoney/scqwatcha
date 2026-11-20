@@ -1,0 +1,19 @@
+scqwatcha - manual install
+==================================
+
+Easiest: use the .pkg installer from the same release page instead.
+
+Manual install (this zip):
+1. Copy "scqwatcha.vst3"      to  /Library/Audio/Plug-Ins/VST3/
+2. Copy "scqwatcha.component" to  /Library/Audio/Plug-Ins/Components/
+3. Copy "scqwatcha.app"       to  /Applications/  (optional, standalone app)
+4. The files came from the internet, so macOS marks them as "quarantined".
+   Open Terminal and run these three lines, otherwise your DAW may refuse to load them:
+
+   xattr -dr com.apple.quarantine "/Library/Audio/Plug-Ins/VST3/scqwatcha.vst3"
+   xattr -dr com.apple.quarantine "/Library/Audio/Plug-Ins/Components/scqwatcha.component"
+   xattr -dr com.apple.quarantine "/Applications/scqwatcha.app"
+
+5. In your DAW, rescan plugins.
+
+Help: https://github.com/printMoney/scqwatcha

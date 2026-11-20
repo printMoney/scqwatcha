@@ -433,7 +433,7 @@ juce::File HotkeyMap::userFile()
 {
     return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
         .getChildFile ("Application Support")
-        .getChildFile ("Turntable Sampler")
+        .getChildFile ("scqwatcha")
         .getChildFile ("hotkeys.json");
 }
 

@@ -105,10 +105,10 @@ void LiquidGlassSkin::drawTitle (juce::Graphics& g, juce::Rectangle<float> a)
 {
     g.setColour (palette.text);
     g.setFont (juce::Font (juce::FontOptions ("Helvetica Neue", "Bold", 21.0f)));
-    g.drawText ("Turntable", a.removeFromTop (a.getHeight() * 0.58f), juce::Justification::bottomLeft);
+    g.drawText ("scqwatcha", a.removeFromTop (a.getHeight() * 0.58f), juce::Justification::bottomLeft);
     g.setColour (palette.dim);
     g.setFont (juce::Font (juce::FontOptions ("Helvetica Neue", "Light", 15.0f)));
-    g.drawText ("Sampler", a, juce::Justification::topLeft);
+    g.drawText ("Turntable sampler", a, juce::Justification::topLeft);
 }
 
 void LiquidGlassSkin::drawPanel (juce::Graphics& g, juce::Rectangle<float> r, const juce::String& title, juce::Colour tint)

@@ -22,16 +22,18 @@ jobs:
 
       - name: Check universal binaries
         run: |
-          lipo -archs "build/TurntableSampler_artefacts/Release/VST3/Turntable Sampler.vst3/Contents/MacOS/Turntable Sampler" | grep -q "x86_64 arm64"
-          lipo -archs "build/TurntableSampler_artefacts/Release/AU/Turntable Sampler.component/Contents/MacOS/Turntable Sampler" | grep -q "x86_64 arm64"
+          lipo -archs "build/TurntableSampler_artefacts/Release/VST3/scqwatcha.vst3/Contents/MacOS/scqwatcha" | grep -q "x86_64 arm64"
+          lipo -archs "build/TurntableSampler_artefacts/Release/AU/scqwatcha.component/Contents/MacOS/scqwatcha" | grep -q "x86_64 arm64"
 
       - name: auval and pluginval
-        run: scripts/validate.sh
+        run: |
+          killall -9 AudioComponentRegistrar || true
+          scripts/validate.sh
 
       - name: Upload plugins
         uses: actions/upload-artifact@v4
         with:
-          name: turntable-sampler-macos
+          name: scqwatcha-macos
           path: |
-            build/TurntableSampler_artefacts/Release/VST3/Turntable Sampler.vst3
-            build/TurntableSampler_artefacts/Release/AU/Turntable Sampler.component
+            build/TurntableSampler_artefacts/Release/VST3/scqwatcha.vst3
+            build/TurntableSampler_artefacts/Release/AU/scqwatcha.component

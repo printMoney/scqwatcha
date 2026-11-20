@@ -4,3 +4,4 @@ external/
 tools/
 .DS_Store
 *.xcuserstate
+release/

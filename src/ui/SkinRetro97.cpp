@@ -146,14 +146,18 @@ void Retro97Skin::drawBackground (juce::Graphics& g, juce::Rectangle<float> r)
 void Retro97Skin::drawTitle (juce::Graphics& g, juce::Rectangle<float> a)
 {
     auto top = a.removeFromTop (a.getHeight() * 0.6f);
+    const auto nameFont = juce::Font (juce::FontOptions ("DIN Alternate", "Bold", 24.0f)).withExtraKerningFactor (0.03f);
+    const float nameW = juce::GlyphArrangement::getStringWidth (nameFont, "SCQWATCHA") + 8.0f;
     g.setColour (ink);
-    g.setFont (juce::Font (juce::FontOptions ("DIN Alternate", "Bold", 26.0f)).withExtraKerningFactor (0.04f));
-    g.drawText ("TT-97", top.removeFromLeft (78.0f), juce::Justification::bottomLeft);
+    g.setFont (nameFont);
+    g.drawText ("SCQWATCHA", top.removeFromLeft (nameW), juce::Justification::bottomLeft);
+    // Model badge.
+    auto badge = top.removeFromLeft (38.0f).withTrimmedBottom (4.0f).removeFromBottom (13.0f);
     g.setColour (palette.transport);
+    g.fillRoundedRectangle (badge, 2.0f);
+    g.setColour (juce::Colours::black);
     g.setFont (labelFont (9.5f));
-    auto words = top.withTrimmedBottom (3.0f).removeFromBottom (22.0f);
-    g.drawText ("SAMPLING", words.removeFromTop (11.0f), juce::Justification::bottomLeft);
-    g.drawText ("TURNTABLE", words, juce::Justification::bottomLeft);
+    g.drawText ("TT-97", badge, juce::Justification::centred);
     g.setColour (palette.dim);
     g.setFont (juce::Font (juce::FontOptions ("Hiragino Sans", "W3", 8.5f)));
     g.drawText (katakanaSubtitle(), a, juce::Justification::topLeft);

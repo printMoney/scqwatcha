@@ -142,10 +142,10 @@ void Skin::drawTitle (juce::Graphics& g, juce::Rectangle<float> a)
 {
     g.setColour (palette.text);
     g.setFont (font (20.0f, true));
-    g.drawText ("TURNTABLE", a.removeFromTop (a.getHeight() * 0.55f), juce::Justification::bottomLeft);
+    g.drawText ("SCQWATCHA", a.removeFromTop (a.getHeight() * 0.55f), juce::Justification::bottomLeft);
     g.setColour (palette.transport);
-    g.setFont (labelFont (11.0f).withExtraKerningFactor (0.25f));
-    g.drawText ("SAMPLER", a, juce::Justification::topLeft);
+    g.setFont (labelFont (10.0f).withExtraKerningFactor (0.2f));
+    g.drawText ("TURNTABLE SAMPLER", a, juce::Justification::topLeft);
 }
 
 void Skin::drawPanel (juce::Graphics& g, juce::Rectangle<float> r, const juce::String& title, juce::Colour tint)

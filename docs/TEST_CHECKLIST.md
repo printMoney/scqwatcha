@@ -2,7 +2,7 @@
 
 Do these in order in a new Live set. Tick each box. Note anything odd next to it.
 
-Setup: `scripts/build.sh`, then in Live: Settings → Plug-Ins → Rescan. Create a MIDI track and drop **Turntable Sampler** (VST3 or AU) on it. Set the Live tempo to 120 and press Live's play.
+Setup: `scripts/build.sh`, then in Live: Settings → Plug-Ins → Rescan. Create a MIDI track and drop **scqwatcha** (VST3 or AU) on it. Set the Live tempo to 120 and press Live's play.
 
 - [ ] **Load sample:** drag a drum loop from Finder onto the platter. The label shows its name, the waveform appears, and SAMPLE BPM shows a sensible tempo (fix it with /2 or x2 if needed).
 - [ ] **Play:** click inside the plugin window, press **Space**. The record spins up and plays in time with Live's metronome.
