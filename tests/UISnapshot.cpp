@@ -1,5 +1,5 @@
 // Renders the plugin window to a PNG without opening it on screen.
-// Usage: UISnapshot <out.png> [sample-file]
+// Usage: UISnapshot <out.png> [sample-file] [skin name]
 
 #include "PluginEditor.h"
 #include "PluginProcessor.h"
@@ -83,7 +83,10 @@ int main (int argc, char** argv)
         return 0;
     }
 
-    juce::MessageManager::getInstance()->runDispatchLoopUntil (200);
+    if (argc > 3)
+        if (auto* te = dynamic_cast<ts::TurntableEditor*> (editor.get()))
+            te->applySkin (juce::String (argv[3]), false);
+    juce::MessageManager::getInstance()->runDispatchLoopUntil (300);
     auto img = editor->createComponentSnapshot (editor->getLocalBounds(), true, 2.0f);
     proc->editorBeingDeleted (editor.get());
 

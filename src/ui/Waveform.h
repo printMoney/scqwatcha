@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LookAndFeel.h"
+#include "Skin.h"
 
 namespace ts
 {
@@ -19,6 +19,7 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override { cacheValid = false; }
+    void lookAndFeelChanged() override { cacheValid = false; repaint(); }
     void mouseDown (const juce::MouseEvent&) override;
     void mouseDrag (const juce::MouseEvent&) override;
 

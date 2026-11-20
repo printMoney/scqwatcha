@@ -42,7 +42,7 @@ void Waveform::rebuildCache()
     const float mid = getHeight() * 0.5f;
     const float amp = getHeight() * 0.46f;
     const int bins = (int) s->peakMax.size();
-    g.setColour (Colours::accent.withAlpha (0.75f));
+    g.setColour (Skin::of (*this).waveColour());
     for (int x = 0; x < getWidth(); ++x)
     {
         const int b0 = x * bins / getWidth();
@@ -79,14 +79,15 @@ void Waveform::refresh()
 void Waveform::paint (juce::Graphics& g)
 {
     auto r = getLocalBounds().toFloat();
-    g.setColour (Colours::panel);
-    g.fillRoundedRectangle (r, 8.0f);
+    auto& skin = Skin::of (*this);
+    const auto& pal = skin.pal();
+    skin.drawWaveformFrame (g, r);
 
     const auto* s = proc.getUiSample();
     if (s == nullptr)
     {
-        g.setColour (Colours::dim);
-        g.setFont (TSLookAndFeel::font (13.0f));
+        g.setColour (pal.dim);
+        g.setFont (skin.font (13.0f));
         g.drawText ("Waveform appears here after you load a sample", r, juce::Justification::centred);
         return;
     }
@@ -98,26 +99,26 @@ void Waveform::paint (juce::Graphics& g)
     if (proc.getLoopOut() > proc.getLoopIn())
     {
         const float x0 = xFor (proc.getLoopIn()), x1 = xFor (proc.getLoopOut());
-        g.setColour (Colours::pad.withAlpha (proc.isLoopOn() ? 0.28f : 0.10f));
+        g.setColour (pal.loop.withAlpha (proc.isLoopOn() ? 0.28f : 0.10f));
         g.fillRect (x0, 0.0f, juce::jmax (1.0f, x1 - x0), r.getHeight());
-        g.setColour (Colours::pad.withAlpha (proc.isLoopOn() ? 1.0f : 0.4f));
+        g.setColour (pal.loop.withAlpha (proc.isLoopOn() ? 1.0f : 0.4f));
         g.fillRect (x0, 0.0f, 2.0f, r.getHeight());
         g.fillRect (x1 - 2.0f, 0.0f, 2.0f, r.getHeight());
     }
 
     if (cache.isValid())
-        g.drawImage (cache, r, juce::RectanglePlacement::stretchToFit);
+        g.drawImage (cache, r.reduced (0.0f, 4.0f), juce::RectanglePlacement::stretchToFit);
 
     // Cue marker.
     const float cx = xFor (proc.getCue());
-    g.setColour (Colours::text.withAlpha (0.7f));
+    g.setColour (pal.screenText.withAlpha (0.7f));
     juce::Path tri;
     tri.addTriangle (cx - 5.0f, 0.0f, cx + 5.0f, 0.0f, cx, 7.0f);
     g.fillPath (tri);
 
     // Playhead.
     const float px = xFor (proc.status.playhead.load());
-    g.setColour (proc.status.repeatIndex.load() >= 0 ? Colours::repeater : juce::Colours::white);
+    g.setColour (proc.status.repeatIndex.load() >= 0 ? pal.repeater : pal.screenText);
     g.fillRect (px - 1.0f, 0.0f, 2.0f, r.getHeight());
 }
 

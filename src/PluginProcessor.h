@@ -37,6 +37,7 @@ inline const juce::Identifier loopIn { "loopIn" };
 inline const juce::Identifier loopOut { "loopOut" };
 inline const juce::Identifier loopOn { "loopOn" };
 inline const juce::Identifier playhead { "playhead" };
+inline const juce::Identifier skin { "skin" };
 inline juce::Identifier padIn (int i) { return juce::Identifier ("pad" + juce::String (i) + "In"); }
 inline juce::Identifier padOut (int i) { return juce::Identifier ("pad" + juce::String (i) + "Out"); }
 } // namespace DeckID
@@ -109,6 +110,10 @@ public:
     double getLoopIn() const;
     double getLoopOut() const;
     double getCue() const;
+
+    // Look of the window: saved with the set; the last choice is the default for new instances.
+    juce::String getSkinName() const;
+    void setSkinName (const juce::String& name);
 
     double barFrames() const;   // one 4/4 bar of the current sample, in source frames
     // Snaps a position to the beat grid (beats counted from the sample start) when Snap is on.

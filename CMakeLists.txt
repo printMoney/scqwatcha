@@ -55,7 +55,10 @@ target_sources(TurntableSampler PRIVATE
     src/HotkeyMap.cpp
     src/KeyboardLayout.mm
     src/SampleLoader.cpp
-    src/ui/LookAndFeel.cpp
+    src/ui/Skin.cpp
+    src/ui/SkinStudioInk.cpp
+    src/ui/SkinLiquidGlass.cpp
+    src/ui/SkinRetro97.cpp
     src/ui/Platter.cpp
     src/ui/Waveform.cpp
     src/ui/XYPad.cpp

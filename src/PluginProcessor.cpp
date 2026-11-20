@@ -9,6 +9,32 @@ namespace ts
 namespace
 {
 constexpr double minLoopFrames = 16.0;
+
+// Small per-user settings file (remembers the last skin). Opened only when needed.
+juce::PropertiesFile::Options settingsOptions()
+{
+    juce::PropertiesFile::Options o;
+    o.applicationName = "settings";
+    o.folderName = "Turntable Sampler";
+    o.filenameSuffix = ".xml";
+    o.osxLibrarySubFolder = "Application Support";
+    o.storageFormat = juce::PropertiesFile::storeAsXML;
+    o.millisecondsBeforeSaving = 0;
+    return o;
+}
+
+juce::String readDefaultSkin()
+{
+    juce::PropertiesFile file (settingsOptions());
+    return file.getValue ("skin", "Studio Ink");
+}
+
+void writeDefaultSkin (const juce::String& name)
+{
+    juce::PropertiesFile file (settingsOptions());
+    file.setValue ("skin", name);
+    file.saveIfNeeded();
+}
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout TurntableProcessor::createLayout()
@@ -92,6 +118,7 @@ TurntableProcessor::TurntableProcessor()
         deck.setProperty (DeckID::padIn (i), -1.0, nullptr);
         deck.setProperty (DeckID::padOut (i), -1.0, nullptr);
     }
+    deck.setProperty (DeckID::skin, readDefaultSkin(), nullptr);
     deck.addListener (this);
     updateSnapshot();
 
@@ -553,6 +580,17 @@ void TurntableProcessor::storePad (int i)
     undoManager.beginNewTransaction ("Store pad");
     deck.setProperty (DeckID::padIn (i), in, &undoManager);
     deck.setProperty (DeckID::padOut (i), out, &undoManager);
+}
+
+juce::String TurntableProcessor::getSkinName() const
+{
+    return deck[DeckID::skin].toString();
+}
+
+void TurntableProcessor::setSkinName (const juce::String& name)
+{
+    deck.setProperty (DeckID::skin, name, nullptr);
+    writeDefaultSkin (name);
 }
 
 // ---------------------------------------------------------------- transport

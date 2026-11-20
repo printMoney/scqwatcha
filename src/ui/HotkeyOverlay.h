@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../HotkeyMap.h"
-#include "LookAndFeel.h"
+#include "Skin.h"
 
 namespace ts
 {

@@ -28,9 +28,24 @@ beat-repeat it, filter it, and keep it in time with your project.
 | Keep pitch | **K**: tempo changes without pitch change (granular time-stretch). **-** / **=** shift pitch ±1 semitone |
 | Filter | XY pad: X = cutoff, Y = resonance (low-pass state-variable filter). **F** bypass, **Left/Right** cutoff, **Alt+Up/Down** resonance |
 | Extras | Waveform with playhead / loop / cue (click to jump), output gain (**9** / **0**) and meter, undo/redo for loop edits (**Cmd+Z**, **Cmd+Shift+Z**), set cue (**C**) |
+| Skins | Three looks, picked from the **Skin** menu at the top right (see [Skins](#skins)) |
 | Hotkeys | Every control has a key. Press **?** or **H** for the list. Keys follow your keyboard layout (US, German, Austrian, ...) and are stored in an editable JSON file |
 
 Everything you set (sample path, sample BPM, loop, cue, pads, all knobs) is saved with your Ableton set and restored when you reopen it.
+
+## Skins
+
+Pick a skin from the **Skin** menu at the top right. It switches with a short cross-fade and is saved with
+your set. The last one you picked becomes the default for new instances. All skins share the same layout
+and the same feel: pads sink in and flash, toggles and lights fade, knobs glide to their value (double-click
+resets, hold **Shift** for fine control), and the platter redraws at your display's refresh rate.
+
+| Studio Ink (default) | Liquid Glass | Retro '97 |
+|---|---|---|
+| ![Studio Ink](docs/skins/StudioInk.png) | ![Liquid Glass](docs/skins/LiquidGlass.png) | ![Retro '97](docs/skins/Retro97.png) |
+| Calm, high-contrast dark look for performing. Colour only marks what is active. | Frosted glass panels over a soft colour field, glossy pebble controls. | Late-90s Japanese sampler: warm grey plastic, amber dot-matrix screens, backlit rubber pads. |
+
+Skins live in `src/ui/Skin*.cpp`. A new skin subclasses `Skin` and overrides only what it draws differently.
 
 ## Hotkeys
 

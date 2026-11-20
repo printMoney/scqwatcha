@@ -49,14 +49,16 @@ void HotkeyOverlay::resized()
 
 void HotkeyOverlay::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black.withAlpha (0.88f));
+    auto& skin = Skin::of (*this);
+    const auto& pal = skin.pal();
+    skin.drawOverlay (g, getLocalBounds().toFloat());
 
     auto r = getLocalBounds().reduced (30);
-    g.setColour (Colours::accent);
-    g.setFont (TSLookAndFeel::font (20.0f, true));
+    g.setColour (pal.transport);
+    g.setFont (skin.font (20.0f, true));
     g.drawText ("Hotkeys", r.removeFromTop (30), juce::Justification::left);
-    g.setColour (Colours::dim);
-    g.setFont (TSLookAndFeel::font (12.0f));
+    g.setColour (pal.screenText.withAlpha (0.6f));
+    g.setFont (skin.font (12.0f));
     g.drawText ("Click inside the plugin window first so it receives the keys. File: " + HotkeyMap::userFile().getFullPathName(),
                 r.removeFromTop (18), juce::Justification::left);
     r.removeFromTop (8);
@@ -64,7 +66,7 @@ void HotkeyOverlay::paint (juce::Graphics& g)
 
     if (! problems.isEmpty())
     {
-        g.setColour (Colours::danger);
+        g.setColour (pal.danger);
         g.drawFittedText (problems.joinIntoString ("\n"), r.removeFromBottom (18 * juce::jmin (4, problems.size())),
                           juce::Justification::topLeft, 4);
     }
@@ -77,12 +79,12 @@ void HotkeyOverlay::paint (juce::Graphics& g)
     for (int i = 0; i < keys.size(); ++i)
     {
         const int col = i / rows, row = i % rows;
-        auto cell = juce::Rectangle<float> ((float) (r.getX() + col * colW), r.getY() + row * rowH, (float) colW - 10.0f, rowH);
-        g.setColour (Colours::accent);
-        g.setFont (TSLookAndFeel::font (12.5f, true));
-        g.drawText (keys[i], cell.removeFromLeft (92.0f), juce::Justification::left);
-        g.setColour (Colours::text);
-        g.setFont (TSLookAndFeel::font (12.5f));
+        auto cell = juce::Rectangle<float> ((float) (r.getX() + col * colW), (float) r.getY() + (float) row * rowH, (float) colW - 10.0f, rowH);
+        g.setColour (pal.transport);
+        g.setFont (skin.font (12.5f, true));
+        g.drawText (keys[i], cell.removeFromLeft (96.0f), juce::Justification::left);
+        g.setColour (pal.screenText);
+        g.setFont (skin.font (12.5f));
         g.drawText (labels[i], cell, juce::Justification::left);
     }
 }

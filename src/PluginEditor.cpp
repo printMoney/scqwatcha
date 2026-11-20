@@ -19,71 +19,77 @@ juce::String formatTime (double seconds)
 TurntableEditor::TurntableEditor (TurntableProcessor& p)
     : AudioProcessorEditor (p),
       proc (p),
+      skin (Skin::create (p.getSkinName().isNotEmpty() ? p.getSkinName() : Skin::defaultName)),
       waveform (p),
       platter (p),
       xyPad (*p.apvts.getParameter (ParamID::cutoff), *p.apvts.getParameter (ParamID::resonance),
              *p.apvts.getParameter (ParamID::filterBypass))
 {
-    setLookAndFeel (&lnf);
+    setLookAndFeel (skin.get());
     hotkeyProblems = hotkeys.loadOrCreateUserFile();
 
     // Header.
     for (auto* b : { &loadButton, &halfButton, &doubleButton, &detectButton, &helpButton })
         addAndMakeVisible (*b);
-    loadButton.setColour (juce::TextButton::buttonColourId, Colours::accent.withAlpha (0.85f));
-    loadButton.setColour (juce::TextButton::textColourOffId, juce::Colours::black);
-    loadButton.onClick = [this] { openFileChooser(); };
-    halfButton.onClick = [this] { proc.setParam (ParamID::sampleBpm, proc.getParam (ParamID::sampleBpm) * 0.5f); };
-    doubleButton.onClick = [this] { proc.setParam (ParamID::sampleBpm, proc.getParam (ParamID::sampleBpm) * 2.0f); };
-    detectButton.onClick = [this] { proc.redetectBpm(); };
-    helpButton.onClick = [this] { toggleHelp(); };
+    loadButton.onPress = [this] (const juce::ModifierKeys&) { openFileChooser(); };
+    halfButton.onPress = [this] (const juce::ModifierKeys&) { proc.setParam (ParamID::sampleBpm, proc.getParam (ParamID::sampleBpm) * 0.5f); };
+    doubleButton.onPress = [this] (const juce::ModifierKeys&) { proc.setParam (ParamID::sampleBpm, proc.getParam (ParamID::sampleBpm) * 2.0f); };
+    detectButton.onPress = [this] (const juce::ModifierKeys&) { proc.redetectBpm(); };
+    helpButton.onPress = [this] (const juce::ModifierKeys&) { toggleHelp(); };
 
     addAndMakeVisible (sampleBpm);
-    sampleBpm.setTextBoxStyle (juce::Slider::TextBoxLeft, false, 70, 26);
+    sampleBpm.setTextBoxStyle (juce::Slider::TextBoxLeft, false, 74, 26);
     sliderAttachments.push_back (std::make_unique<SliderAttachment> (proc.apvts, ParamID::sampleBpm, sampleBpm));
     sampleBpm.setRange (40.0, 250.0, 0.1);
     sampleBpm.setNumDecimalPlacesToDisplay (2);
 
-    setupKnob (gainKnob, Colours::text);
-    sliderAttachments.push_back (std::make_unique<SliderAttachment> (proc.apvts, ParamID::gain, gainKnob));
+    attachKnob (gainKnob, ParamID::gain);
+
+    addAndMakeVisible (skinMenu);
+    skinMenu.addItemList (Skin::names(), 1);
+    skinMenu.setSelectedItemIndex (juce::jmax (0, Skin::names().indexOf (skin->name())), juce::dontSendNotification);
+    skinMenu.onChange = [this] {
+        const auto name = skinMenu.getText();
+        if (name.isNotEmpty() && name != skin->name())
+        {
+            proc.setSkinName (name);
+            applySkin (name, true);
+        }
+    };
 
     addAndMakeVisible (waveform);
     addAndMakeVisible (platter);
 
     // Filter.
     addAndMakeVisible (xyPad);
-    setupToggle (bypassToggle, Colours::filter);
+    addAndMakeVisible (bypassToggle);
     buttonAttachments.push_back (std::make_unique<ButtonAttachment> (proc.apvts, ParamID::filterBypass, bypassToggle));
 
     // Repeater.
     for (int i = 0; i < DeckEngine::numRepeatRates; ++i)
     {
-        rateButtons[i] = std::make_unique<PadButton> (rateNames[i], Colours::repeater);
+        rateButtons[i] = std::make_unique<PadButton> (rateNames[i], PadButton::Tint::Repeater);
         rateButtons[i]->onPress = [this, i] (const juce::ModifierKeys&) { proc.repeat (i, true); };
         rateButtons[i]->onRelease = [this, i] { proc.repeat (i, false); };
         addAndMakeVisible (*rateButtons[i]);
     }
-    setupKnob (mixKnob, Colours::repeater);
-    sliderAttachments.push_back (std::make_unique<SliderAttachment> (proc.apvts, ParamID::repeaterMix, mixKnob));
+    attachKnob (mixKnob, ParamID::repeaterMix);
 
     // Tempo.
-    setupKnob (bpmKnob, Colours::accent);
-    sliderAttachments.push_back (std::make_unique<SliderAttachment> (proc.apvts, ParamID::systemBpm, bpmKnob));
+    attachKnob (bpmKnob, ParamID::systemBpm);
     bpmKnob.onDragStart = [this] {
         if (proc.getParam (ParamID::overrideBpm) < 0.5f)
             proc.setParam (ParamID::overrideBpm, 1.0f);
     };
-    setupToggle (overrideToggle, Colours::accent);
-    setupToggle (syncToggle, Colours::accent);
-    setupToggle (keepPitchToggle, Colours::accent);
+    for (auto* t : { &overrideToggle, &syncToggle, &keepPitchToggle })
+        addAndMakeVisible (*t);
     buttonAttachments.push_back (std::make_unique<ButtonAttachment> (proc.apvts, ParamID::overrideBpm, overrideToggle));
     buttonAttachments.push_back (std::make_unique<ButtonAttachment> (proc.apvts, ParamID::sync, syncToggle));
     buttonAttachments.push_back (std::make_unique<ButtonAttachment> (proc.apvts, ParamID::keepPitch, keepPitchToggle));
     addAndMakeVisible (pitchSlider);
     pitchSlider.setTextBoxStyle (juce::Slider::TextBoxLeft, false, 44, 24);
     sliderAttachments.push_back (std::make_unique<SliderAttachment> (proc.apvts, ParamID::pitch, pitchSlider));
-    setupKnob (tapeKnob, Colours::accent);
-    sliderAttachments.push_back (std::make_unique<SliderAttachment> (proc.apvts, ParamID::tapeStopTime, tapeKnob));
+    attachKnob (tapeKnob, ParamID::tapeStopTime);
     tapeKnob.setTextValueSuffix (" s");
 
     // Transport.
@@ -101,10 +107,12 @@ TurntableEditor::TurntableEditor (TurntableProcessor& p)
     setCueButton.onPress = [this] (const juce::ModifierKeys&) { proc.setCueHere(); };
     undoButton.onPress = [this] (const juce::ModifierKeys&) { proc.undoManager.undo(); };
     redoButton.onPress = [this] (const juce::ModifierKeys&) { proc.undoManager.redo(); };
+    addAndMakeVisible (snapToggle);
+    buttonAttachments.push_back (std::make_unique<ButtonAttachment> (proc.apvts, ParamID::snap, snapToggle));
 
     for (int i = 0; i < TurntableProcessor::numPads; ++i)
     {
-        pads[i] = std::make_unique<PadButton> (juce::String (i + 1), Colours::pad);
+        pads[i] = std::make_unique<PadButton> (juce::String (i + 1), PadButton::Tint::Loop);
         pads[i]->onPress = [this, i] (const juce::ModifierKeys& m) {
             if (m.isShiftDown())
                 proc.storePad (i);
@@ -114,12 +122,10 @@ TurntableEditor::TurntableEditor (TurntableProcessor& p)
         addAndMakeVisible (*pads[i]);
     }
 
-    setupToggle (snapToggle, Colours::pad);
-    buttonAttachments.push_back (std::make_unique<ButtonAttachment> (proc.apvts, ParamID::snap, snapToggle));
-
     addChildComponent (overlay);
     overlay.onClose = [this] { overlay.setVisible (false); grabFocusSoon(); };
     overlay.onReload = [this] { reloadHotkeys(); };
+    addChildComponent (fadeLayer);
 
     // Keys must reach the editor, not a slider or button.
     for (auto* c : getChildren())
@@ -133,7 +139,7 @@ TurntableEditor::TurntableEditor (TurntableProcessor& p)
     proc.onSampleChanged = [this] { waveform.sampleChanged(); platter.repaint(); repaint(); };
 
     setSize (editorWidth, editorHeight);
-    startTimerHz (60);
+    startTimerHz (30);
 }
 
 TurntableEditor::~TurntableEditor()
@@ -144,19 +150,25 @@ TurntableEditor::~TurntableEditor()
     setLookAndFeel (nullptr);
 }
 
-void TurntableEditor::setupKnob (juce::Slider& s, juce::Colour c)
+void TurntableEditor::attachKnob (Knob& k, const char* paramID)
 {
-    s.setColour (juce::Slider::rotarySliderFillColourId, c);
-    if (s.getTextBoxPosition() != juce::Slider::NoTextBox)
-        s.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 70, 18);
-    s.setPopupDisplayEnabled (false, false, nullptr);
-    addAndMakeVisible (s);
+    addAndMakeVisible (k);
+    sliderAttachments.push_back (std::make_unique<SliderAttachment> (proc.apvts, paramID, k));
+    if (auto* param = proc.apvts.getParameter (paramID))
+        k.resetTo (param->convertFrom0to1 (param->getDefaultValue()));
 }
 
-void TurntableEditor::setupToggle (juce::ToggleButton& b, juce::Colour c)
+void TurntableEditor::applySkin (const juce::String& name, bool animate)
 {
-    b.setColour (juce::ToggleButton::tickColourId, c);
-    addAndMakeVisible (b);
+    if (animate && isShowing() && getWidth() > 0)
+        fadeLayer.start (createComponentSnapshot (getLocalBounds(), true));
+
+    auto next = Skin::create (name);
+    setLookAndFeel (next.get());
+    skin = std::move (next);
+    skinMenu.setSelectedItemIndex (juce::jmax (0, Skin::names().indexOf (skin->name())), juce::dontSendNotification);
+    fadeLayer.toFront (false);
+    repaint();
 }
 
 // ---------------------------------------------------------------- layout
@@ -168,22 +180,26 @@ void TurntableEditor::resized()
     headerArea = r.removeFromTop (56);
     {
         auto h = headerArea;
-        h.removeFromLeft (200); // title
+        titleArea = h.removeFromLeft (200).reduced (0, 6);
         loadButton.setBounds (h.removeFromLeft (80).reduced (0, 12));
         h.removeFromLeft (24);
-        h.removeFromLeft (84); // "SAMPLE BPM" label
+        sampleBpmLabelArea = h.removeFromLeft (84);
         sampleBpm.setBounds (h.removeFromLeft (150).reduced (0, 14));
         h.removeFromLeft (6);
-        halfButton.setBounds (h.removeFromLeft (40).reduced (2, 14));
-        doubleButton.setBounds (h.removeFromLeft (40).reduced (2, 14));
-        detectButton.setBounds (h.removeFromLeft (70).reduced (2, 14));
+        halfButton.setBounds (h.removeFromLeft (40).reduced (2, 13));
+        doubleButton.setBounds (h.removeFromLeft (40).reduced (2, 13));
+        detectButton.setBounds (h.removeFromLeft (74).reduced (2, 13));
 
         helpButton.setBounds (h.removeFromRight (36).reduced (0, 12));
+        h.removeFromRight (8);
+        auto skinArea = h.removeFromRight (150);
+        skinLabelArea = skinArea.removeFromTop (14);
+        skinMenu.setBounds (skinArea.reduced (0, 4).withTrimmedBottom (4));
         h.removeFromRight (16);
         meterArea = h.removeFromRight (18).reduced (0, 8);
         h.removeFromRight (6);
-        gainArea = h.removeFromRight (100);
-        gainKnob.setBounds (gainArea.removeFromRight (56));
+        gainKnob.setBounds (h.removeFromRight (50).reduced (0, 2));
+        gainLabelArea = h.removeFromRight (36);
     }
 
     r.removeFromTop (8);
@@ -197,7 +213,7 @@ void TurntableEditor::resized()
     {
         auto f = filterPanel.reduced (12);
         auto top = f.removeFromTop (22);
-        bypassToggle.setBounds (top.removeFromRight (84));
+        bypassToggle.setBounds (top.removeFromRight (90));
         f.removeFromTop (8);
         xyPad.setBounds (f);
     }
@@ -207,12 +223,13 @@ void TurntableEditor::resized()
     {
         auto rp = repeaterPanel.reduced (12);
         rp.removeFromTop (24);
-        auto knob = rp.removeFromRight (78);
-        mixKnob.setBounds (knob.withTrimmedTop (4));
+        auto knob = rp.removeFromRight (80);
+        mixLabelArea = knob.removeFromTop (14);
+        mixKnob.setBounds (knob);
         rp.removeFromRight (8);
         const int w = rp.getWidth() / DeckEngine::numRepeatRates;
         for (int i = 0; i < DeckEngine::numRepeatRates; ++i)
-            rateButtons[i]->setBounds (rp.removeFromLeft (w).reduced (3, 6));
+            rateButtons[i]->setBounds (rp.removeFromLeft (w).reduced (2, 6));
     }
     middle.removeFromTop (12);
 
@@ -220,30 +237,32 @@ void TurntableEditor::resized()
     {
         auto t = tempoPanel.reduced (12);
         t.removeFromTop (22);
-        auto left = t.removeFromLeft (110);
-        bpmKnob.setBounds (left.removeFromTop (100));
-        tempoInfoArea = left;
+        auto left = t.removeFromLeft (112);
+        bpmKnob.setBounds (left.removeFromTop (84).reduced (4, 0));
+        tempoInfoArea = left.withTrimmedTop (8);
 
         auto right = t.withTrimmedLeft (10);
-        auto tape = right.removeFromRight (84);
-        tape.removeFromTop (16);
-        tapeKnob.setBounds (tape.removeFromTop (100));
+        auto tape = right.removeFromRight (86);
+        tapeLabelArea = tape.removeFromTop (16);
+        tapeKnob.setBounds (tape.removeFromTop (104));
 
-        overrideToggle.setBounds (right.removeFromTop (28));
+        overrideToggle.setBounds (right.removeFromTop (30));
         right.removeFromTop (6);
-        auto row = right.removeFromTop (28);
+        auto row = right.removeFromTop (30);
         syncToggle.setBounds (row.removeFromLeft (row.getWidth() / 2 - 3));
         row.removeFromLeft (6);
         keepPitchToggle.setBounds (row);
-        right.removeFromTop (8);
-        pitchSlider.setBounds (right.removeFromTop (26).withTrimmedLeft (44));
+        right.removeFromTop (10);
+        auto pitchRow = right.removeFromTop (26);
+        pitchLabelArea = pitchRow.removeFromLeft (44);
+        pitchSlider.setBounds (pitchRow);
     }
 
     r.removeFromTop (8);
     auto transport = r.removeFromTop (64);
     {
-        PadButton* buttons[] = { &cueButton, &playButton, &tapeButton, &loopButton, &inButton, &outButton, &setCueButton, &undoButton, &redoButton };
-        const int widths[] = { 110, 140, 140, 110, 80, 80, 110, 0, 0 };
+        PadButton* buttons[] = { &cueButton, &playButton, &tapeButton, &loopButton, &inButton, &outButton, &setCueButton };
+        const int widths[] = { 110, 140, 140, 110, 80, 80, 110 };
         for (int i = 0; i < 7; ++i)
         {
             buttons[i]->setBounds (transport.removeFromLeft (widths[i]).reduced (3, 0));
@@ -251,14 +270,14 @@ void TurntableEditor::resized()
                 transport.removeFromLeft (14);
         }
         transport.removeFromLeft (6);
-        snapToggle.setBounds (transport.removeFromLeft (76).reduced (3, 14));
+        snapToggle.setBounds (transport.removeFromLeft (76).reduced (3, 16));
         redoButton.setBounds (transport.removeFromRight (90).reduced (3, 0));
         undoButton.setBounds (transport.removeFromRight (90).reduced (3, 0));
     }
 
     r.removeFromTop (8);
-    statusArea = r.removeFromBottom (22);
-    r.removeFromBottom (4);
+    statusArea = r.removeFromBottom (24);
+    r.removeFromBottom (6);
     {
         auto padRow = r;
         const int w = padRow.getWidth() / TurntableProcessor::numPads;
@@ -267,89 +286,37 @@ void TurntableEditor::resized()
     }
 
     overlay.setBounds (getLocalBounds());
+    fadeLayer.setBounds (getLocalBounds());
 }
 
 void TurntableEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (Colours::background);
+    auto& s = *skin;
+    s.drawBackground (g, getLocalBounds().toFloat());
+    s.drawTitle (g, titleArea.toFloat());
 
-    // Title.
-    {
-        auto t = headerArea.withWidth (200);
-        g.setColour (Colours::accent);
-        g.setFont (TSLookAndFeel::font (19.0f, true));
-        g.drawText ("TURNTABLE", t.removeFromTop (30).withTrimmedTop (6), juce::Justification::bottomLeft);
-        g.setColour (Colours::dim);
-        g.setFont (TSLookAndFeel::font (12.0f, true));
-        g.drawText ("SAMPLER", t, juce::Justification::topLeft);
-    }
+    s.drawSmallLabel (g, sampleBpmLabelArea.toFloat(), "Sample BPM", juce::Justification::centredLeft);
+    s.drawSmallLabel (g, gainLabelArea.toFloat(), "Gain", juce::Justification::centredRight);
+    s.drawSmallLabel (g, skinLabelArea.toFloat(), "Skin", juce::Justification::centredLeft);
+    s.drawMeter (g, meterArea.toFloat(), meterL, meterR);
 
-    g.setColour (Colours::dim);
-    g.setFont (TSLookAndFeel::font (11.0f, true));
-    g.drawText ("SAMPLE BPM", headerArea.withX (headerArea.getX() + 304).withWidth (84), juce::Justification::centredLeft);
-    g.drawText ("GAIN", gainArea, juce::Justification::centredRight);
+    s.drawPanel (g, filterPanel.toFloat(), "Filter", s.pal().filter);
+    s.drawPanel (g, repeaterPanel.toFloat(), "Repeater", s.pal().repeater);
+    s.drawPanel (g, tempoPanel.toFloat(), "Tempo", s.pal().transport);
 
-    // Meter.
-    {
-        auto m = meterArea.toFloat();
-        g.setColour (Colours::panelEdge);
-        g.fillRoundedRectangle (m, 3.0f);
-        auto drawBar = [&] (juce::Rectangle<float> bar, float level) {
-            const float db = juce::Decibels::gainToDecibels (level, -60.0f);
-            const float frac = juce::jlimit (0.0f, 1.0f, (db + 60.0f) / 63.0f);
-            auto filled = bar.removeFromBottom (bar.getHeight() * frac);
-            g.setColour (level > 0.99f ? Colours::danger : (db > -6.0f ? Colours::accent : Colours::filter));
-            g.fillRect (filled);
-        };
-        auto left = m.reduced (2.0f);
-        auto right = left.removeFromRight (left.getWidth() * 0.5f);
-        drawBar (left.withTrimmedRight (1.0f), meterL);
-        drawBar (right.withTrimmedLeft (1.0f), meterR);
-    }
+    s.drawSmallLabel (g, mixLabelArea.toFloat(), "Mix", juce::Justification::centred);
+    s.drawSmallLabel (g, tapeLabelArea.toFloat(), "Tape stop", juce::Justification::centred);
+    s.drawSmallLabel (g, pitchLabelArea.toFloat(), "Pitch", juce::Justification::centredLeft);
 
-    drawPanel (g, filterPanel.toFloat(), "Filter", Colours::filter);
-    drawPanel (g, repeaterPanel.toFloat(), "Repeater", Colours::repeater);
-    drawPanel (g, tempoPanel.toFloat(), "Tempo", Colours::accent);
-
-    g.setFont (TSLookAndFeel::font (11.0f, true));
-    g.setColour (Colours::dim);
-    g.drawText ("MIX", mixKnob.getBounds().withHeight (12).translated (0, -10), juce::Justification::centred);
-    g.drawText ("TAPE STOP", tapeKnob.getBounds().withHeight (12).translated (0, -14), juce::Justification::centred);
-    g.drawText ("PITCH", pitchSlider.getBounds().withX (pitchSlider.getX() - 44).withWidth (44), juce::Justification::centredLeft);
-
-    // Tempo readout.
-    {
-        auto t = tempoInfoArea.withTrimmedTop (4);
-        const bool hostValid = proc.status.hostBpmValid.load();
-        const bool overridden = proc.getParam (ParamID::overrideBpm) > 0.5f || ! hostValid;
-        g.setFont (TSLookAndFeel::font (12.0f));
-        g.setColour (overridden ? Colours::dim : Colours::text);
-        g.drawText (hostValid ? "Host " + juce::String (proc.status.hostBpm.load(), 1) : juce::String ("Host: none"),
-                    t.removeFromTop (16), juce::Justification::centred);
-        g.setColour (Colours::accent);
-        g.setFont (TSLookAndFeel::font (13.0f, true));
-        g.drawText ("Using " + juce::String (proc.effectiveBpm(), 1), t.removeFromTop (18), juce::Justification::centred);
-        g.setFont (TSLookAndFeel::font (11.0f));
-        g.setColour (Colours::dim);
-        g.drawText ("speed x" + juce::String (proc.status.tempoRatio.load(), 3), t.removeFromTop (16), juce::Justification::centred);
-    }
-
-    // Status line.
-    g.setFont (TSLookAndFeel::font (12.0f));
-    const auto err = proc.getLastError();
-    g.setColour (err.isNotEmpty() ? Colours::danger : Colours::dim);
-    g.drawText (lastStatus, statusArea, juce::Justification::centredLeft);
-    g.setColour (Colours::dim);
-    g.drawText ("Press ? for hotkeys", statusArea, juce::Justification::centredRight);
+    s.drawScreen (g, tempoInfoArea.toFloat(), tempoLines, juce::Justification::centred);
+    s.drawStatusBar (g, statusArea.toFloat(), statusLeft, "Press ? or H for hotkeys", statusWarning);
 }
 
 // ---------------------------------------------------------------- timer
 
 void TurntableEditor::timerCallback()
 {
-    platter.refresh();
     waveform.refresh();
-    xyPad.refresh();
 
     // Catch key releases even if the OS did not tell us (e.g. focus moved).
     releaseHeldKeys (false);
@@ -370,18 +337,33 @@ void TurntableEditor::timerCallback()
     redoButton.setFilled (proc.undoManager.canRedo());
     pitchSlider.setEnabled (proc.getParam (ParamID::keepPitch) > 0.5f);
 
-    // Meter with simple decay.
+    // Meter with a gentle fall.
     const float pl = proc.status.peakL.exchange (0.0f);
     const float pr = proc.status.peakR.exchange (0.0f);
-    meterL = juce::jmax (pl, meterL * 0.88f);
-    meterR = juce::jmax (pr, meterR * 0.88f);
+    meterL = juce::jmax (pl, meterL * 0.86f);
+    meterR = juce::jmax (pr, meterR * 0.86f);
+
+    // Tempo readout.
+    {
+        const bool hostValid = proc.status.hostBpmValid.load();
+        const bool overridden = proc.getParam (ParamID::overrideBpm) > 0.5f || ! hostValid;
+        tempoLines.clearQuick();
+        tempoLines.add (overridden ? (hostValid ? "Host " + juce::String (proc.status.hostBpm.load(), 1) + " (off)" : juce::String ("No host tempo"))
+                                   : juce::String ("Following host"));
+        tempoLines.add (juce::String (proc.effectiveBpm(), 1));
+        tempoLines.add ("BPM   x" + juce::String (proc.status.tempoRatio.load(), 3));
+    }
 
     // Status text.
     juce::String status;
+    statusWarning = false;
     if (proc.isLoading())
         status = "Loading sample...";
     else if (proc.getLastError().isNotEmpty())
+    {
         status = proc.getLastError();
+        statusWarning = true;
+    }
     else if (const auto* s = proc.getUiSample())
     {
         const double ph = proc.status.playhead.load() / s->sampleRate;
@@ -394,9 +376,7 @@ void TurntableEditor::timerCallback()
     }
     else
         status = "No sample loaded. Drop a WAV, AIFF or MP3 on the platter, or click LOAD.";
-
-    if (status != lastStatus)
-        lastStatus = status;
+    statusLeft = status;
 
     const uint64_t seq = proc.status.sampleSeq.load();
     if (seq != shownSeq)
@@ -405,10 +385,44 @@ void TurntableEditor::timerCallback()
         waveform.sampleChanged();
     }
 
-    repaint (headerArea);
+    repaint (meterArea.expanded (2));
     repaint (tempoInfoArea);
     repaint (statusArea);
 }
+
+// Visual feedback for a key press on the matching on-screen control.
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wswitch-enum")
+void TurntableEditor::flashFor (Action a)
+{
+    const int idx = (int) a;
+    switch (a)
+    {
+        case Action::PlayPause:   playButton.flash(); break;
+        case Action::HardRestart: cueButton.flash(); break;
+        case Action::TapeStop:    tapeButton.flash(); break;
+        case Action::LoopToggle:  loopButton.flash(); break;
+        case Action::LoopIn:      inButton.flash(); break;
+        case Action::LoopOut:     outButton.flash(); break;
+        case Action::SetCue:      setCueButton.flash(); break;
+        case Action::Undo:        undoButton.flash(); break;
+        case Action::Redo:        redoButton.flash(); break;
+        case Action::LoadSample:  loadButton.flash(); break;
+        case Action::ShowHelp:    helpButton.flash(); break;
+        case Action::Repeat1: case Action::Repeat2: case Action::Repeat4: case Action::Repeat8: case Action::Repeat16:
+            rateButtons[idx - (int) Action::Repeat1]->flash();
+            break;
+        case Action::Pad1: case Action::Pad2: case Action::Pad3: case Action::Pad4:
+        case Action::Pad5: case Action::Pad6: case Action::Pad7: case Action::Pad8:
+            pads[idx - (int) Action::Pad1]->flash();
+            break;
+        case Action::PadStore1: case Action::PadStore2: case Action::PadStore3: case Action::PadStore4:
+        case Action::PadStore5: case Action::PadStore6: case Action::PadStore7: case Action::PadStore8:
+            pads[idx - (int) Action::PadStore1]->flash();
+            break;
+        default: break;
+    }
+}
+JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
 // ---------------------------------------------------------------- keyboard
 
@@ -456,6 +470,8 @@ bool TurntableEditor::keyPressed (const juce::KeyPress& key)
         return true;
 
     keysDown.addIfNotAlreadyThere (code);
+    if (! isRepeat)
+        flashFor (*action);
     if (info->momentary)
     {
         if (heldActions.count (code) == 0)

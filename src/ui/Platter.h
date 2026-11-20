@@ -1,6 +1,7 @@
 #pragma once
 
-#include "LookAndFeel.h"
+#include "Animation.h"
+#include "Skin.h"
 
 namespace ts
 {
@@ -9,12 +10,11 @@ class TurntableProcessor;
 
 // The spinning record. Drop a file on it to load; drag on it (or hold the
 // scratch key and move the mouse over it) to scratch.
-class Platter final : public juce::Component, public juce::FileDragAndDropTarget
+class Platter final : public juce::Component, public juce::FileDragAndDropTarget, private Animated
 {
 public:
     explicit Platter (TurntableProcessor& p);
 
-    void refresh();                 // called from the editor timer
     void setScratchKey (bool held); // scratch hotkey pressed / released
     void releaseAll();
 
@@ -30,6 +30,7 @@ public:
     void filesDropped (const juce::StringArray& files, int, int) override;
 
 private:
+    bool animate (float dt) override;
     juce::Point<float> centre() const;
     float discRadius() const;
     void track (juce::Point<float> pos);
@@ -40,6 +41,8 @@ private:
     bool mouseHeld = false, keyHeld = false, scratchActive = false;
     float lastAngle = 0.0f;
     bool dropHover = false;
+    Smooth scratchGlow;
+    float speed = 0.0f;
 };
 
 } // namespace ts

@@ -10,7 +10,7 @@ namespace
 constexpr float twoPi = juce::MathConstants<float>::twoPi;
 }
 
-Platter::Platter (TurntableProcessor& p) : proc (p)
+Platter::Platter (TurntableProcessor& p) : Animated (static_cast<juce::Component&> (*this)), proc (p)
 {
     setWantsKeyboardFocus (false);
     setMouseClickGrabsKeyboardFocus (false);
@@ -20,92 +20,43 @@ juce::Point<float> Platter::centre() const { return getLocalBounds().toFloat().g
 
 float Platter::discRadius() const
 {
-    return juce::jmin (getWidth(), getHeight()) * 0.5f - 14.0f;
+    return (float) juce::jmin (getWidth(), getHeight()) * 0.5f - 18.0f;
 }
 
-void Platter::refresh()
+bool Platter::animate (float dt)
 {
+    bool moved = false;
     const auto* s = proc.getUiSample();
     const double secs = s != nullptr && s->sampleRate > 0 ? proc.status.playhead.load() / s->sampleRate : 0.0;
     const double a = std::fmod (secs / DeckEngine::revolutionSeconds, 1.0) * twoPi;
-    if (std::abs (a - angle) > 0.002)
+    if (std::abs (a - angle) > 0.0005)
     {
         angle = a;
-        repaint();
+        moved = true;
     }
+    const float sp = (float) proc.status.speed.load();
+    if (std::abs (sp - speed) > 0.01f)
+    {
+        speed = sp;
+        moved = true;
+    }
+    scratchGlow.target = scratchActive ? 1.0f : 0.0f;
+    moved |= scratchGlow.update (dt, 18.0f);
+    return moved;
 }
 
 void Platter::paint (juce::Graphics& g)
 {
-    const auto c = centre();
-    const float R = discRadius();
     const auto* s = proc.getUiSample();
-
-    // Plinth.
-    g.setColour (Colours::panel);
-    g.fillRoundedRectangle (getLocalBounds().toFloat(), 14.0f);
-
-    // Platter rim.
-    g.setColour (juce::Colour (0xff3a3d45));
-    g.fillEllipse (juce::Rectangle<float> ((R + 8) * 2, (R + 8) * 2).withCentre (c));
-    g.setColour (scratchActive ? Colours::accent : juce::Colour (0xff4a4e58));
-    g.drawEllipse (juce::Rectangle<float> ((R + 7) * 2, (R + 7) * 2).withCentre (c), scratchActive ? 3.0f : 1.0f);
-
-    // Vinyl with grooves.
-    g.setGradientFill (juce::ColourGradient (juce::Colour (0xff1b1b1e), c.x, c.y, juce::Colour (0xff09090a), c.x + R, c.y + R, true));
-    g.fillEllipse (juce::Rectangle<float> (R * 2, R * 2).withCentre (c));
-    g.setColour (juce::Colours::white.withAlpha (0.045f));
-    for (float r = R * 0.42f; r < R * 0.97f; r += 3.0f)
-        g.drawEllipse (juce::Rectangle<float> (r * 2, r * 2).withCentre (c), 0.6f);
-
-    // Static light reflection (does not rotate).
-    juce::Path sheen;
-    sheen.addPieSegment (juce::Rectangle<float> (R * 2, R * 2).withCentre (c), -0.6f, 0.3f, 0.42f);
-    g.setColour (juce::Colours::white.withAlpha (0.05f));
-    g.fillPath (sheen);
-    sheen.applyTransform (juce::AffineTransform::rotation (juce::MathConstants<float>::pi, c.x, c.y));
-    g.fillPath (sheen);
-
-    // Rotating part: label and marker.
-    {
-        juce::Graphics::ScopedSaveState state (g);
-        g.addTransform (juce::AffineTransform::rotation ((float) angle, c.x, c.y));
-
-        const float L = R * 0.36f;
-        g.setColour (s != nullptr ? Colours::accent : Colours::panelEdge);
-        g.fillEllipse (juce::Rectangle<float> (L * 2, L * 2).withCentre (c));
-        g.setColour (juce::Colours::black.withAlpha (0.25f));
-        g.drawEllipse (juce::Rectangle<float> (L * 1.6f, L * 1.6f).withCentre (c), 1.0f);
-
-        g.setColour (juce::Colours::black);
-        g.setFont (TSLookAndFeel::font (juce::jmax (10.0f, L * 0.18f), true));
-        const auto name = s != nullptr ? s->name : juce::String ("NO SAMPLE");
-        g.drawFittedText (name, juce::Rectangle<float> (L * 1.5f, L * 0.5f).withCentre (c.translated (0, -L * 0.42f)).toNearestInt(),
-                          juce::Justification::centred, 2);
-
-        // Marker stripe so rotation is visible.
-        g.setColour (juce::Colours::white.withAlpha (0.85f));
-        g.fillRoundedRectangle (juce::Rectangle<float> (4.0f, R * 0.5f).withPosition (c.x - 2.0f, c.y - R * 0.97f), 2.0f);
-    }
-
-    // Spindle.
-    g.setColour (juce::Colour (0xffc9ccd3));
-    g.fillEllipse (juce::Rectangle<float> (12, 12).withCentre (c));
-
-    if (s == nullptr || proc.isLoading())
-    {
-        g.setColour (Colours::text.withAlpha (0.85f));
-        g.setFont (TSLookAndFeel::font (15.0f, true));
-        const auto msg = proc.isLoading() ? juce::String ("Loading...") : juce::String ("Drop a sample here\nor press O");
-        g.drawFittedText (msg, juce::Rectangle<float> (R * 1.4f, 50.0f).withCentre (c.translated (0, R * 0.6f)).toNearestInt(),
-                          juce::Justification::centred, 2);
-    }
-
-    if (dropHover)
-    {
-        g.setColour (Colours::accent);
-        g.drawRoundedRectangle (getLocalBounds().toFloat().reduced (2.0f), 14.0f, 3.0f);
-    }
+    PlatterLook look;
+    look.angle = angle;
+    look.hasSample = s != nullptr;
+    look.name = s != nullptr ? s->name : juce::String();
+    look.message = proc.isLoading() ? juce::String ("Loading...") : (s == nullptr ? juce::String ("Drop a sample here\nor press Cmd+O") : juce::String());
+    look.scratch = scratchGlow.value;
+    look.dropHover = dropHover;
+    look.speed = speed;
+    Skin::of (*this).drawPlatter (g, getLocalBounds().toFloat(), look);
 }
 
 void Platter::track (juce::Point<float> pos)
