@@ -1,0 +1,37 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  macos:
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (universal binary)
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DTS_COPY_PLUGINS=ON
+
+      - name: Build
+        run: cmake --build build --config Release -j 4
+
+      - name: Engine tests
+        run: ./build/TurntableTests_artefacts/Release/TurntableTests
+
+      - name: Check universal binaries
+        run: |
+          lipo -archs "build/TurntableSampler_artefacts/Release/VST3/Turntable Sampler.vst3/Contents/MacOS/Turntable Sampler" | grep -q "x86_64 arm64"
+          lipo -archs "build/TurntableSampler_artefacts/Release/AU/Turntable Sampler.component/Contents/MacOS/Turntable Sampler" | grep -q "x86_64 arm64"
+
+      - name: auval and pluginval
+        run: scripts/validate.sh
+
+      - name: Upload plugins
+        uses: actions/upload-artifact@v4
+        with:
+          name: turntable-sampler-macos
+          path: |
+            build/TurntableSampler_artefacts/Release/VST3/Turntable Sampler.vst3
+            build/TurntableSampler_artefacts/Release/AU/Turntable Sampler.component
